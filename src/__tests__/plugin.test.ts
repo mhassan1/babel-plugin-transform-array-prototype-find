@@ -42,5 +42,33 @@ pluginTester({
       output:
         'class a extends b {\n  constructor() {\n    Array.isArray(this) ? super.filter((v) => v === 1)[0] : super.find((v) => v === 1);\n  }\n}',
     },
+    {
+      code: 'a.b.find((v) => v === 1);',
+      output: 'Array.isArray(a.b) ? a.b.filter((v) => v === 1)[0] : a.b.find((v) => v === 1);',
+    },
+    {
+      code: 'a?.b.find((v) => v === 1);',
+      output: 'Array.isArray(a?.b) ? a?.b.filter((v) => v === 1)[0] : a?.b.find((v) => v === 1);',
+    },
+    {
+      code: 'a.b?.find((v) => v === 1);',
+      output: 'Array.isArray(a.b) ? a.b?.filter((v) => v === 1)[0] : a.b?.find((v) => v === 1);',
+    },
+    {
+      code: 'a.b.find?.((v) => v === 1);',
+      output: 'Array.isArray(a.b) ? a.b.filter?.((v) => v === 1)[0] : a.b.find?.((v) => v === 1);',
+    },
+    {
+      code: 'a?.b.find?.((v) => v === 1);',
+      output: 'Array.isArray(a?.b) ? a?.b.filter?.((v) => v === 1)[0] : a?.b.find?.((v) => v === 1);',
+    },
+    {
+      code: 'a.b?.find?.((v) => v === 1);',
+      output: 'Array.isArray(a.b) ? a.b?.filter?.((v) => v === 1)[0] : a.b?.find?.((v) => v === 1);',
+    },
+    {
+      code: '[]?.find((v) => v === 1);',
+      output: '[]?.filter((v) => v === 1)[0];',
+    },
   ],
 });
