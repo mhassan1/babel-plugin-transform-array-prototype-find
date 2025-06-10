@@ -37,5 +37,10 @@ pluginTester({
       code: "'a'['find'](v => v === 1);",
       output: "Array.isArray('a') ? 'a'.filter((v) => v === 1)[0] : 'a'['find']((v) => v === 1);",
     },
+    {
+      code: 'class a extends b {\n  constructor() {\n    super.find((v) => v === 1);\n  }\n}',
+      output:
+        'class a extends b {\n  constructor() {\n    Array.isArray(this) ? super.filter((v) => v === 1)[0] : super.find((v) => v === 1);\n  }\n}',
+    },
   ],
 });

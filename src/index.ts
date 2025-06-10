@@ -26,8 +26,6 @@ export default function pluginTransformArrayFind({ types: t }: { types: typeof B
           return;
         }
 
-        if (t.isSuper(callee.object)) return;
-
         const filterExpression = t.memberExpression(
           t.callExpression(t.memberExpression(callee.object, t.identifier('filter')), args),
           t.numericLiteral(0),
@@ -39,7 +37,7 @@ export default function pluginTransformArrayFind({ types: t }: { types: typeof B
         } else {
           const isArrayExpression = t.callExpression(
             t.memberExpression(t.identifier('Array'), t.identifier('isArray')),
-            [callee.object],
+            [t.isSuper(callee.object) ? t.thisExpression() : callee.object],
           );
 
           findExpression.visited = true;
