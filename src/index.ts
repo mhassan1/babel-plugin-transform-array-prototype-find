@@ -26,14 +26,37 @@ export default function pluginTransformArrayFind({ types: t }: { types: typeof B
       return;
     }
 
-    const filterMemberExpression = t.isMemberExpression(callee)
-      ? t.memberExpression(callee.object, t.identifier('filter'))
-      : t.optionalMemberExpression(callee.object, t.identifier('filter'), undefined, callee.optional);
+    const argsHaveSpreadElement = args.some((arg) => t.isSpreadElement(arg));
+    const innerArgs = Array(args.length)
+      .fill(undefined)
+      .map(function (_, i) {
+        return t.identifier('a' + i);
+      });
 
-    const filterCallExpression = t.isCallExpression(findExpression)
-      ? t.callExpression(filterMemberExpression, args)
-      : t.optionalCallExpression(filterMemberExpression, args, findExpression.optional);
+    const makeCallExpression = (fnName: string): CallExpressionVisited | OptionalCallExpressionVisited => {
+      const memberExpression = t.isMemberExpression(callee)
+        ? t.memberExpression(
+            t.isArrayExpression(callee.object) || t.isSuper(callee.object) ? callee.object : t.identifier('o'),
+            t.identifier(fnName),
+          )
+        : t.optionalMemberExpression(
+            t.isArrayExpression(callee.object) || t.isSuper(callee.object) ? callee.object : t.identifier('o'),
+            t.identifier(fnName),
+            undefined,
+            true,
+          );
+      const callExpressionArgs = t.isArrayExpression(callee.object)
+        ? args
+        : argsHaveSpreadElement
+        ? [t.spreadElement(t.identifier('a'))]
+        : innerArgs;
+      const callExpression = t.isCallExpression(findExpression)
+        ? t.callExpression(memberExpression, callExpressionArgs)
+        : t.optionalCallExpression(memberExpression, callExpressionArgs, findExpression.optional);
+      return callExpression;
+    };
 
+    const filterCallExpression = makeCallExpression('filter');
     const filterExpression = t.isCallExpression(findExpression)
       ? t.memberExpression(filterCallExpression, t.numericLiteral(0), true)
       : t.optionalMemberExpression(filterCallExpression, t.numericLiteral(0), true, false);
@@ -42,14 +65,30 @@ export default function pluginTransformArrayFind({ types: t }: { types: typeof B
       path.replaceWith(filterExpression);
     } else {
       const isArrayExpression = t.callExpression(t.memberExpression(t.identifier('Array'), t.identifier('isArray')), [
-        t.isSuper(callee.object) ? t.thisExpression() : callee.object,
+        t.isSuper(callee.object) ? t.thisExpression() : t.identifier('o'),
       ]);
 
-      findExpression.visited = true;
+      const newFindExpression = makeCallExpression('find');
+      newFindExpression.visited = true;
 
-      path.replaceWith(
-        t.expressionStatement(t.conditionalExpression(isArrayExpression, filterExpression, findExpression)),
-      );
+      const functionBlockStatement = t.blockStatement([
+        t.returnStatement(t.conditionalExpression(isArrayExpression, filterExpression, newFindExpression)),
+      ]);
+
+      const functionArgs = argsHaveSpreadElement
+        ? [t.identifier('o'), t.restElement(t.identifier('a'))]
+        : [t.identifier('o')].concat(innerArgs);
+
+      const functionDeclaration = t.isSuper(callee.object)
+        ? t.arrowFunctionExpression(functionArgs, functionBlockStatement)
+        : t.functionExpression(undefined, functionArgs, functionBlockStatement);
+
+      const functionCallArgs = [t.isSuper(callee.object) ? t.identifier('undefined') : callee.object];
+      Array.prototype.push.apply(functionCallArgs, args);
+
+      const functionCallExpression = t.callExpression(functionDeclaration, functionCallArgs);
+
+      path.replaceWith(functionCallExpression);
     }
   };
   return {

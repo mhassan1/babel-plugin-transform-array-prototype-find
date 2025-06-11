@@ -20,8 +20,8 @@ arr['find'](v => v === 1);
 ```javascript
 [1, 2, 3].filter(v => v === 1)[0];
 [1, 2, 3].filter(v => v === 1)[0];
-Array.isArray(arr) ? arr.filter(v => v === 1)[0] : arr.find(v => v === 1);
-Array.isArray(arr) ? arr.filter(v => v === 1)[0] : arr['find'](v => v === 1);
+(function (o, a0) { return Array.isArray(o) ? o.filter(a0)[0] : o.find(a0); })(arr, v => v === 1);
+(function (o, a0) { return Array.isArray(o) ? o.filter(a0)[0] : o.find(a0); })(arr, v => v === 1);
 ```
 
 ## Caveats
