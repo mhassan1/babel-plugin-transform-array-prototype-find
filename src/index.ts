@@ -55,10 +55,10 @@ export default function pluginTransformArrayFind({ types: t }: { types: typeof B
   return {
     name: 'transform array find',
     visitor: {
-      OptionalCallExpression(path) {
+      CallExpression(path) {
         CallExpressionOrOptionalCallExpression(path);
       },
-      CallExpression(path) {
+      OptionalCallExpression(path) {
         CallExpressionOrOptionalCallExpression(path);
       },
     },
