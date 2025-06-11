@@ -48,8 +48,8 @@ export default function pluginTransformArrayFind({ types: t }: { types: typeof B
       const callExpressionArgs = t.isArrayExpression(callee.object)
         ? args
         : argsHaveSpreadElement
-        ? [t.spreadElement(t.identifier('a'))]
-        : innerArgs;
+          ? [t.spreadElement(t.identifier('a'))]
+          : innerArgs;
       const callExpression = t.isCallExpression(findExpression)
         ? t.callExpression(memberExpression, callExpressionArgs)
         : t.optionalCallExpression(memberExpression, callExpressionArgs, findExpression.optional);
