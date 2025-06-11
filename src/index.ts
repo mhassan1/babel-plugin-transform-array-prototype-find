@@ -14,11 +14,11 @@ export default function pluginTransformArrayFind({ types: t }: { types: typeof B
   visitor: Visitor;
 } {
   const CallExpressionOrOptionalCallExpression = (path: VisitorMethodParameters) => {
-    const includesExpression: CallExpressionVisited | OptionalCallExpressionVisited = path.node;
+    const findExpression: CallExpressionVisited | OptionalCallExpressionVisited = path.node;
 
-    if (includesExpression.visited) return;
+    if (findExpression.visited) return;
 
-    const { callee, arguments: args } = includesExpression;
+    const { callee, arguments: args } = findExpression;
 
     if (!t.isMemberExpression(callee) && !t.isOptionalMemberExpression(callee)) return;
 
@@ -30,11 +30,11 @@ export default function pluginTransformArrayFind({ types: t }: { types: typeof B
       ? t.memberExpression(callee.object, t.identifier('filter'))
       : t.optionalMemberExpression(callee.object, t.identifier('filter'), undefined, callee.optional);
 
-    const filterCallExpression = t.isCallExpression(includesExpression)
+    const filterCallExpression = t.isCallExpression(findExpression)
       ? t.callExpression(filterMemberExpression, args)
-      : t.optionalCallExpression(filterMemberExpression, args, includesExpression.optional);
+      : t.optionalCallExpression(filterMemberExpression, args, findExpression.optional);
 
-    const filterExpression = t.isCallExpression(includesExpression)
+    const filterExpression = t.isCallExpression(findExpression)
       ? t.memberExpression(filterCallExpression, t.numericLiteral(0), true)
       : t.optionalMemberExpression(filterCallExpression, t.numericLiteral(0), true, false);
 
@@ -45,10 +45,10 @@ export default function pluginTransformArrayFind({ types: t }: { types: typeof B
         t.isSuper(callee.object) ? t.thisExpression() : callee.object,
       ]);
 
-      includesExpression.visited = true;
+      findExpression.visited = true;
 
       path.replaceWith(
-        t.expressionStatement(t.conditionalExpression(isArrayExpression, filterExpression, includesExpression)),
+        t.expressionStatement(t.conditionalExpression(isArrayExpression, filterExpression, findExpression)),
       );
     }
   };
